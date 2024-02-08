@@ -1,11 +1,13 @@
-import logging
 import sys
+import logging
+import requests
 from os import getenv
 from aiohttp import web
-from aiogram import Bot, Dispatcher, Router, types
 from aiogram.enums import ParseMode
+from aiogram import Bot, Dispatcher, Router, types
 
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram.utils.keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
 from dotenv import load_dotenv
 
