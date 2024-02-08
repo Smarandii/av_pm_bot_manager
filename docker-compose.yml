@@ -7,6 +7,5 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
-    restart: unless-stopped
     env_file:
       - .env
