@@ -8,10 +8,3 @@ class Request:
         self.client_description = client_description
         self.budget = budget
         self.status = "new" if status is None else status
-
-
-class PaymentTicket:
-    def __init__(self, amount, status, user):
-        self.amount = amount
-        self.status = status
-        self.user = user

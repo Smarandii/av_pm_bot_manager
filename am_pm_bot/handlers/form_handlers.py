@@ -20,7 +20,7 @@ async def init_form_budget_handler(message: Message,
                                    state: FSMContext) -> None:
     await state.update_data(budget=message.text)
     request = await bot_pm.save_request(state, message)
-    await bot_pm.notify_managers(request)
+    await bot_pm.notify_managers_about_new_request(request)
     await state.clear()
 
 
@@ -28,7 +28,6 @@ async def init_form_budget_handler(message: Message,
 async def create_payment_ticket_form_amount_handler(message: Message,
                                                     state: FSMContext) -> None:
     await state.update_data(amount=message.text)
-    await bot_pm.get_client_telegram_id_by_manager_id(message.from_user.id)
     await state.set_state(CreatePaymentTicketForm.currency)
     await bot_pm.ask_payment_currency(message)
 
@@ -37,4 +36,5 @@ async def create_payment_ticket_form_amount_handler(message: Message,
 async def create_payment_ticket_form_currency_handler(message: Message,
                                                       state: FSMContext) -> None:
     await state.update_data(currency=message.text)
-    await bot_pm.create_ticket_confirmation(message, state)
+    await state.set_state(CreatePaymentTicketForm.confirm)
+    await bot_pm.ask_confirmation(message, state)

@@ -21,12 +21,17 @@ async def command_start_handler(message: Message) -> None:
 
 
 @router.message(Command("terminate_connection"))
-async def command_start_handler(message: Message) -> None:
+async def command_terminate_connection_handler(message: Message) -> None:
     await bot_pm.disconnect_manager_from_client(message)
 
 
 @router.message(Command("request_payment"))
-async def command_start_handler(message: Message, state: FSMContext) -> None:
+async def command_request_payment_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(CreatePaymentTicketForm.amount)
     await bot_pm.create_payment_request(message)
 
+
+@router.message(Command("check_payment"))
+async def command_payment_success_handler(message: Message) -> None:
+    await bot_pm.check_yoomoney_payment(message)
+    await bot_pm.check_crypto_payment(message)
