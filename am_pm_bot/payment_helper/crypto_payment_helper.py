@@ -15,9 +15,10 @@ class CryptoPaymentHelper:
             order_name: str,
             currency="USDT"
     ):
+
         return requests.get(
             url=f"{self.API_HOST}/invoices/new?source_currency=USD"
-                f"&source_amount={source_amount}"
+                f"&source_amount={source_amount if source_amount > 11 else source_amount + (11 - source_amount)}"
                 f"&order_number={order_number}"
                 f"&currency={currency}"
                 f"&email=av_pm_bot@paymet.com"

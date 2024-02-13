@@ -34,4 +34,4 @@ async def command_request_payment_handler(message: Message, state: FSMContext) -
 @router.message(Command("check_payment"))
 async def command_payment_success_handler(message: Message) -> None:
     await bot_pm.check_yoomoney_payment(message)
-    await bot_pm.check_crypto_payment(message)
+    await bot_pm.check_plisio_payment(message)

@@ -61,7 +61,7 @@ class BotHelper:
         self.__strapi_helper.save_payment_ticket_crypto_invoice_id(payment_ticket_id, payment_url)
 
         return InlineKeyboardButton(
-            text=f"Pay {amount} {currency} via CryptoHelper",
+            text=f"Pay {amount} {currency} via Plisio",
             url=payment_url
         )
 
@@ -181,6 +181,10 @@ class BotHelper:
                 await message.answer(f"Payment {payment.operation_id} is successful!")
                 await self.notify_manager_about_successful_payment(message.from_user)
                 self.__strapi_helper.change_payment_ticket_status(payment_ticket['id'], payment.status)
+                self.__strapi_helper.save_yoomoney_payment_id_to_payment_ticket(
+                    payment_ticket['id'],
+                    payment.operation_id
+                )
                 no_payment = False
 
         if no_payment:
@@ -224,7 +228,9 @@ class BotHelper:
             await self.__tg_bot.send_message(
                 chat_id=manager['attributes']['telegram_id'],
                 text=f"New request from "
-                     f"{'@' + request.user.username if request.user.username != 'None' else request.user.full_name}",
+                     f"{'@' + request.user.username if request.user.username != 'None' else request.user.full_name}\n\n"
+                     f"Description: {request.client_description}\n\n"
+                     f"Budget: {request.budget} USDT",
                 reply_markup=self.__init_contact_client_keyboard(request)
             )
 

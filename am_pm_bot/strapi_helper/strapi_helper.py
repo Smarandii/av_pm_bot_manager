@@ -176,6 +176,16 @@ class StrapiHelper:
         return self.__send_put(url=f"{self.host}/api/{self.PAYMENT_TICKET_ENTITY_PLURAL}/{payment_ticket_id}",
                                payload=json_body)
 
+    def save_yoomoney_payment_id_to_payment_ticket(self, payment_ticket_id: int, operation_id: str):
+        json_body = {
+            "data": {
+                "yoomoney_operation_id": operation_id
+            }
+        }
+
+        return self.__send_put(url=f"{self.host}/api/{self.PAYMENT_TICKET_ENTITY_PLURAL}/{payment_ticket_id}",
+                               payload=json_body)
+
 
 if __name__ == '__main__':
     s = StrapiHelper()
