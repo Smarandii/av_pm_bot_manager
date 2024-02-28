@@ -11,18 +11,10 @@ bot_pm = BotHelper(tg_bot=bot)
 async def init_form_description_handler(message: Message,
                                         state: FSMContext) -> None:
     await state.update_data(client_description=message.text)
-    await state.set_state(InitForm.budget)
-    await bot_pm.ask_request_budget(message)
+    req = await bot_pm.save_request(state, message)
+    await bot_pm.notify_managers_about_new_request(req)
 
-
-@router.message(InitForm.budget)
-async def init_form_budget_handler(message: Message,
-                                   state: FSMContext) -> None:
-    await state.update_data(budget=message.text)
-    request = await bot_pm.save_request(state, message)
-    await bot_pm.notify_managers_about_new_request(request)
-    await state.clear()
-
+    await state.set_state(None)
 
 @router.message(CreatePaymentTicketForm.amount)
 async def create_payment_ticket_form_amount_handler(message: Message,

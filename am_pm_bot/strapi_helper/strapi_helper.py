@@ -94,16 +94,17 @@ class StrapiHelper:
         return self.__send_post(url=f"{self.host}/api/{self.CLIENT_ENTITY_NAME_PLURAL}", payload=json_body)
 
     def save_request_info(self, request: Request):
+        print(f"----------------- USER_ID: {request.user.id} -----------------  ")
         json_body = {
             "data": {
                 "status": request.status,
                 "client_description": request.client_description,
-                "budget": request.budget,
                 "client": {
                     "connect": [{"id": request.strapi_id}]
                 }
             }
         }
+
 
         return self.__send_post(url=f"{self.host}/api/{self.REQUEST_ENTITY_NAME_PLURAL}", payload=json_body)
 
