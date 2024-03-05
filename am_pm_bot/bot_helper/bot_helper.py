@@ -9,6 +9,11 @@ from am_pm_bot.callback_data.payment_ticket import PaymentTicketCallback
 from am_pm_bot.payment_helper.crypto_payment_helper import CryptoPaymentHelper
 from am_pm_bot import Bot, InlineKeyboardButton, InlineKeyboardMarkup, logging
 from am_pm_bot.payment_helper.yoomoney_payment_helper import YoomoneyPaymentHelper
+import requests
+import datetime as dt
+from datetime import datetime, timedelta
+
+
 
 class BotHelper:
     def __init__(self, tg_bot: Bot):
@@ -20,8 +25,6 @@ class BotHelper:
         self.MANAGER_IDS = [int(manager['attributes']['telegram_id']) for manager in self.MANAGERS]
         self.logger = logging.getLogger("bot_helper")
         self.logger.setLevel(logging.INFO)
-        self.greeting_text = "AV Legal специализируется на оказании юридической помощи корпоративным и частным клиентам по вопросам российского и иностранного законодательства, а также представлении клиентов во взаимоотношениях с государственными органами законодательной, исполнительной и судебной власти.\n\nПрофессиональная команда юристов AV Legal позволяет достигать высоких результатов при реализации самых сложных и комплексных проектов. Успешный многолетний опыт сотрудничества со своими клиентами является залогом дальнейшего развития AV Legal и достижения новых высот.\n\nAV Legal специализируется на консультировании по вопросам корпоративного права, права интеллектуальной собственности, рекламного права и иным областям права. Мы также оказываем услуги по структурированию сложных сделок, регистрации объектов интеллектуальной собственности, регистрации юридических лиц как в России, так и за рубежом, а также разработке налоговых стратегий. Кроме того, AV Legal имеет значительный опыт в составлении досудебных и судебных документов, а также защите прав и интересов клиентов в судах, что обеспечивает нашим клиентам надежную помощь в любых юридических вопросах.\n\nМы придерживаемся мировых стандартов и этических принципов международного юридического консалтинга, обеспечивая профессионализм и стабильно высокое качество услуг. Наш добросовестный подход к выполнению своих обязательств и понимание специфики отрасли клиента составляют основу нашей деловой репутации."
-
 
     def __init_welcome_keyboard(self, message: Message):
         self.__request_button = InlineKeyboardButton(
@@ -30,12 +33,15 @@ class BotHelper:
         )
         return InlineKeyboardMarkup(inline_keyboard=[[self.__request_button]])
 
-    def __init_about_us_keyboard(self, message: Message):
-        self.__about_us_button = InlineKeyboardButton(
+    def __init_aboutUs_keyboard(self, message: Message):
+        self.__request_button = InlineKeyboardButton(
             text="Подробнее о нас",
             callback_data=BaseCallback(command="about_us", user_id=message.from_user.id).pack()
         )
-        return InlineKeyboardMarkup(inline_keyboard=[[self.__about_us_button]])
+        return InlineKeyboardMarkup(inline_keyboard=[[self.__request_button]])
+
+
+
 
     async def __init_pay_via_yoomoney_button(
             self,
@@ -57,7 +63,7 @@ class BotHelper:
             currency = "$"
 
         return InlineKeyboardButton(
-            text=f"{currency}{amount} через Yoomoney",
+            text=f"{currency}{amount} / Yoomoney",
             url=payment_url
         )
 
@@ -82,9 +88,11 @@ class BotHelper:
             currency = "$"
 
         return InlineKeyboardButton(
-            text=f"{currency}{amount} через USDT TRC-20",
+            text=f"{currency}{amount} / USDT TRC-20",
             callback_data="pay_usdt_trc_20" 
         )
+
+
 
     async def __init_pay_choices_keyboard(
             self,
@@ -133,6 +141,10 @@ class BotHelper:
 
         return InlineKeyboardMarkup(inline_keyboard=[[self.__contact_button]])
 
+    global greeting_text
+    greeting_text = "AV Legal специализируется на оказании юридической помощи корпоративным и частным клиентам по вопросам российского и иностранного законодательства, а также представлении клиентов во взаимоотношениях с государственными органами законодательной, исполнительной и судебной власти.\n\nПрофессиональная команда юристов AV Legal позволяет достигать высоких результатов при реализации самых сложных и комплексных проектов. Успешный многолетний опыт сотрудничества со своими клиентами является залогом дальнейшего развития AV Legal и достижения новых высот.\n\nAV Legal специализируется на консультировании по вопросам корпоративного права, права интеллектуальной собственности, рекламного права и иным областям права. Мы также оказываем услуги по структурированию сложных сделок, регистрации объектов интеллектуальной собственности, регистрации юридических лиц как в России, так и за рубежом, а также разработке налоговых стратегий. Кроме того, AV Legal имеет значительный опыт в составлении досудебных и судебных документов, а также защите прав и интересов клиентов в судах, что обеспечивает нашим клиентам надежную помощь в любых юридических вопросах.\n\nМы придерживаемся мировых стандартов и этических принципов международного юридического консалтинга, обеспечивая профессионализм и стабильно высокое качество услуг. Наш добросовестный подход к выполнению своих обязательств и понимание специфики отрасли клиента составляют основу нашей деловой репутации."
+
+
     async def welcome_user(self, message: Message):
         await message.answer("Добро пожаловать в AV Legal!")
         await message.answer("Благодарим Вас за выбор наших юридических услуг. AV Legal специализируется на предоставлении широкого спектра услуг, включая юридические консультации, подготовку документов, юридическое сопровождение сделок, а также защиту прав и интересов в суде. Мы гарантируем оперативность и эффективность в решении Ваших задач.",
@@ -146,9 +158,11 @@ class BotHelper:
     async def ask_request_description(self, callback_query: CallbackQuery):
         await self.__tg_bot.send_message(callback_query.from_user.id, f"Пожалуйста, опишите Вашу ситуацию максимально подробно, укажите все существенные факты и обстоятельства:")
 
+    async def ask_for_wallet(self, callback_query: CallbackQuery):
+        await self.__tg_bot.send_message(callback_query.from_user.id, f"Пожалуйста, предоставьте публичный адрес криптокошелька для дополнительной проверки.")
 
     async def about_us_description(self, callback_query: CallbackQuery):
-        await self.__tg_bot.send_message(callback_query.from_user.id, self.greeting_text)
+        await self.__tg_bot.send_message(callback_query.from_user.id, greeting_text)
 
     async def ask_payment_currency(self, message: Message):
         await self.__tg_bot.send_message(message.from_user.id, f"В какой валюте производится оплата?")
@@ -176,13 +190,17 @@ class BotHelper:
             )
         )
 
+    global unpaid_payment_ticket_id 
+
     async def send_payment_ticket_to_client(self,
                                             callback_query: CallbackQuery,
                                             callback_data: PaymentTicketCallback):
         payment_ticket = self.__strapi_helper.save_payment_ticket_info(callback_data)
+        global unpaid_payment_ticket_id
+        unpaid_payment_ticket_id = payment_ticket['data']['id']
         await self.__tg_bot.send_message(
             chat_id=callback_data.telegram_id,
-            text="Вы только что получили платежный талон. Когда оплата будет завершена - отправьте /check_payment",
+            text="Вы только что получили платежный талон. Когда оплата будет завершена - отправьте /check_payment для платежа банковской картой и /check_crypto_payment для платежа криптовалютой.",
             reply_markup=await self.__init_pay_choices_keyboard(
                 amount=callback_data.amount,
                 telegram_id=callback_data.telegram_id,
@@ -191,12 +209,84 @@ class BotHelper:
             )
         )
 
+        
+
         await self.__tg_bot.send_message(
             chat_id=callback_query.from_user.id,
             text="Запрос отправлен"
         )
 
         await self.__tg_bot.answer_callback_query(callback_query.id)
+
+    async def check_plisio_payment(self, message: Message):
+        payment_id = unpaid_payment_ticket_id # получаем айди текущей транзакции
+        unpaid_payment_tickets = self.__strapi_helper.get_unpaid_payment_tickets_by_telegram_id(message.from_user.id) # список всех транзакций
+        
+        
+        current_transaction_data = next((transaction for transaction in unpaid_payment_tickets if transaction['id'] == payment_id), None) # неоплаченная транзакция
+        
+        amount = current_transaction_data['attributes']['amount'] # сумма к оплате
+        ticketRequestedTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+
+        target = "TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A"
+        blockchain_network = "trc20"
+
+
+        response = requests.get(
+            f"https://api.trongrid.io/v1/accounts/{target}/transactions/{blockchain_network}",
+            headers = {"accept": "application/json"}
+           )
+
+        transaction_chain = []
+
+        for transaction in response.json().get('data', []):
+            currency = transaction.get("token_info", {}).get('symbol')
+            sender = transaction.get('from')
+            receiver = transaction.get("to")
+            money_amount_non_tempered = transaction.get('value', '')
+            dec = -1 * int(transaction.get('token_info', {}).get('decimals', '6'))
+            money_amount_final = float(money_amount_non_tempered[:dec] + '.' + money_amount_non_tempered[dec:])
+            transaction_time = dt.datetime.fromtimestamp(float(transaction.get('block_timestamp', '')) / 1000)
+
+            if receiver == target:
+                if currency == "USDT":
+                    output = f'{transaction_time}|{money_amount_final}'
+                    transaction_chain.append(output)
+
+        def get_time(entry):
+            return dt.datetime.strptime(
+              entry.split('|')[0],
+              "%Y-%m-%d %H:%M:%S"
+            )
+
+        transaction_chain = sorted(transaction_chain, key=get_time)
+
+        transaction_chain = [item for item in transaction_chain if float(item.split('|')[1]) == amount]
+        print(transaction_chain)
+
+        time_filtered_transactions = [item.split('|')[0] for item in transaction_chain]
+
+        print(time_filtered_transactions)
+
+        current_time = datetime.now()
+
+        end_time = current_time + timedelta(hours=1)
+
+        filtered_data_list = []
+
+        for date_str in time_filtered_transactions:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+    
+            if current_time < date_obj < end_time:
+                await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция подтверждена.\nВремя: {date_str}\nОплачено: {amount} USDT")
+                filtered_data_list.append(date_str)
+                self.__strapi_helper.change_payment_ticket_status(payment_id, "success") # отмечаем статус транзкации как успешный
+
+        if not filtered_data_list:
+            await self.__tg_bot.send_message(chat_id=message.from_user.id, text="Не удалось найти недавние платежи.")
+
+
 
     async def check_yoomoney_payment(self, message: Message):
         unpaid_payment_tickets = self.__strapi_helper.get_unpaid_payment_tickets_by_telegram_id(message.from_user.id)
@@ -207,8 +297,12 @@ class BotHelper:
             if payment is not None:
                 self.logger.info(f"Получена оплата: {payment.status} {payment.amount} {payment.label} "
                                  f"{payment.operation_id} {payment.datetime}")
-                await message.answer(f"Оплата {payment.operation_id} успешно завершена!")
-                await self.notify_manager_about_successful_payment(message.from_user)
+
+                await message.answer("Оплата получена.")
+                await message.answer(f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                await self.notify_manager_about_successful_payment(message.from_user, payment)
+
+
                 self.__strapi_helper.change_payment_ticket_status(payment_ticket['id'], payment.status)
                 self.__strapi_helper.save_yoomoney_payment_id_to_payment_ticket(
                     payment_ticket['id'],
@@ -219,21 +313,8 @@ class BotHelper:
         if no_payment:
             await message.answer("Не удалось найти недавние платежи")
 
-    async def check_plisio_payment(self, message: Message):
-        payment_tickets = self.__strapi_helper.get_unpaid_payment_tickets_by_telegram_id(message.from_user.id)
 
-        no_payment = True
-        for payment_ticket in payment_tickets:
-            payment = await self.__crypto_payment_helper.check_payment_from_user(payment_ticket['plisio_invoice_id'])
-            if payment is not None:
-                self.logger.info(f"Получена оплата: {payment['id']} {payment['status']} {payment['invoice_total_sum']}")
-                await message.answer(f"Оплата {payment['id']} {payment['status']}!")
-                await self.notify_manager_about_successful_payment(message.from_user)
-                self.__strapi_helper.change_payment_ticket_status(payment_ticket['id'], payment['status'])
-                no_payment = False
 
-        if no_payment:
-            await message.answer("Не удалось найти недавние платежи")
 
     async def save_request(self, state: FSMContext, message: Message):
         request_data = await state.get_data()
@@ -247,9 +328,11 @@ class BotHelper:
                                          f"Ваш запрос успешно получен. Мы благодарим вас за обращение в AV Legal. Наша команда специалистов приступит к обработке вашего запроса в кратчайшие сроки. Следите за обновлениями и ожидайте ответа от нас в ближайшее время.")
         return request
 
-    async def notify_manager_about_successful_payment(self, user: User):
+    async def notify_manager_about_successful_payment(self, user: User, payment):
         manager = self.__strapi_helper.get_manager_by_client_telegram_id(user.id)
-        await self.__tg_bot.send_message(manager['attributes']['telegram_id'], "Клиент выслал запрос на подтверждение оплаты.")
+        await self.__tg_bot.send_message(manager['attributes']['telegram_id'], f"Клиент оплатил услугу.\nВремя оплаты: {payment.datetime}\nСтатус транзакции: {payment.status}\nПолученная сумма: {payment.amount}\nID операции: {payment.operation_id}")
+
+
 
     async def notify_managers_about_new_request(self, request: Request):
         for manager in self.MANAGERS:
