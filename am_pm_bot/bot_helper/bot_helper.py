@@ -67,6 +67,8 @@ class BotHelper:
             url=payment_url
         )
 
+    global repeatPayment
+
     async def __init_pay_via_crypto_button(
             self,
             amount: float,
@@ -87,11 +89,13 @@ class BotHelper:
         else:
             currency = "$"
 
+        global repeatPayment
+        repeatPayment = f"Оплатите {currency}{amount} через USDT TRC-20, после проведения транзакции отправьте /check_crypto_payment."
+
         return InlineKeyboardButton(
             text=f"{currency}{amount} / USDT TRC-20",
             callback_data="pay_usdt_trc_20" 
         )
-
 
 
     async def __init_pay_choices_keyboard(
@@ -163,6 +167,9 @@ class BotHelper:
 
     async def about_us_description(self, callback_query: CallbackQuery):
         await self.__tg_bot.send_message(callback_query.from_user.id, greeting_text)
+
+    async def text_for_user(self, callback_query: CallbackQuery):
+        await self.__tg_bot.send_message(callback_query.from_user.id, repeatPayment)
 
     async def ask_payment_currency(self, message: Message):
         await self.__tg_bot.send_message(message.from_user.id, f"В какой валюте производится оплата?")

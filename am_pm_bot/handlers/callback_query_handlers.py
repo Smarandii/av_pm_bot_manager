@@ -5,6 +5,8 @@ from am_pm_bot.bot_helper.bot_helper import BotHelper
 from am_pm_bot.handlers import CallbackQuery, F, FSMContext
 from am_pm_bot.callback_data.create_request import BaseCallback
 from aiogram import types
+from aiogram.utils import markdown
+
 
 bot_pm = BotHelper(tg_bot=bot)
 
@@ -25,7 +27,8 @@ async def create_request_handler(callback_query: CallbackQuery,
     
 @router.callback_query(lambda c: c.data == 'pay_usdt_trc_20')
 async def process_usdt_trc_20_payment(callback_query: types.CallbackQuery):
-    await bot.send_message(callback_query.from_user.id, "TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A")
+    await bot_pm.text_for_user(callback_query)
+    await bot.send_message(callback_query.from_user.id, text=f"<code>TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A</code>")
 
     await bot.send_photo(callback_query.from_user.id, "https://cdn.discordapp.com/attachments/1001830460734853211/1211021667346681967/qr.jpg?ex=65ecaed1&is=65da39d1&hm=8d29ec3d08bc96c03a9cc40c4f6eb1603492d6dcaf141f3017262c3fdccc030b&")
 
