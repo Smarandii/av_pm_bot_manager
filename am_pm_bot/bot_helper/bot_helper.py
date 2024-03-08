@@ -231,10 +231,8 @@ class BotHelper:
         
         
         current_transaction_data = next((transaction for transaction in unpaid_payment_tickets if transaction['id'] == payment_id), None) # неоплаченная транзакция
-        
         amount = current_transaction_data['attributes']['amount'] # сумма к оплате
-        ticketRequestedTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
 
         target = "TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A"
         blockchain_network = "trc20"
@@ -244,6 +242,19 @@ class BotHelper:
             f"https://api.trongrid.io/v1/accounts/{target}/transactions/{blockchain_network}",
             headers = {"accept": "application/json"}
            )
+
+        def find_amount_after_commission(amount, list_amounts):
+            commission = 2
+            start_amount = amount - commission
+
+            for i in range((start_amount * 100), (amount + 1) * 100):
+                current_amount = i / 100
+        
+                for number in list_amounts:
+                    if round(current_amount, 2) == number:
+                        return number
+
+            return False
 
         transaction_chain = []
 
@@ -261,6 +272,12 @@ class BotHelper:
                     output = f'{transaction_time}|{money_amount_final}'
                     transaction_chain.append(output)
 
+        print(transaction_chain)
+        transaction_chain_only_amount = []
+        for i in range(len(transaction_chain)):
+            transaction_chain_only_amount.append(float(transaction_chain[i].split('|')[1]))
+        print(transaction_chain_only_amount)
+
         def get_time(entry):
             return dt.datetime.strptime(
               entry.split('|')[0],
@@ -269,29 +286,58 @@ class BotHelper:
 
         transaction_chain = sorted(transaction_chain, key=get_time)
 
-        transaction_chain = [item for item in transaction_chain if float(item.split('|')[1]) == amount]
-        print(transaction_chain)
+        for item in transaction_chain:
+            print(item)
+        amount = find_amount_after_commission(amount, transaction_chain_only_amount)
+        print("AMOUNT N")
+        print(amount)
+        print("AMOUNT N")
 
-        time_filtered_transactions = [item.split('|')[0] for item in transaction_chain]
 
-        print(time_filtered_transactions)
+        async def approve_payment(position):
+            if float(transaction_chain[position].split('|')[1]) == amount:
+                manager = self.__strapi_helper.get_manager_by_client_telegram_id(message.from_user.id)
+                filtered_data = [item for item in transaction_chain if float(item.split('|')[1]) == amount]
+                print(filtered_data)
+                filtered_data = [item.split('|')[0] for item in filtered_data]
+                print("#####")
+                print(filtered_data)
+                current_time = datetime.now() - timedelta(hours=24)
 
-        current_time = datetime.now()
+                end_time = current_time + timedelta(hours=24)
 
-        end_time = current_time + timedelta(hours=1)
 
-        filtered_data_list = []
+                filtered_data_list = []
 
-        for date_str in time_filtered_transactions:
-            date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+                for date_str in filtered_data:
+                    date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
     
-            if current_time < date_obj < end_time:
-                await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция подтверждена.\nВремя: {date_str}\nОплачено: {amount} USDT")
-                filtered_data_list.append(date_str)
-                self.__strapi_helper.change_payment_ticket_status(payment_id, "success") # отмечаем статус транзкации как успешный
+                    if current_time < date_obj < end_time:
+                        await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
+                        await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                        await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция подтверждена.\nВремя: {date_str}\nОплачено: {amount} USDT")
+                        filtered_data_list.append(date_str)
+                        self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
+                    else:
+                        print(f"{position} didn't work")
 
-        if not filtered_data_list:
-            await self.__tg_bot.send_message(chat_id=message.from_user.id, text="Не удалось найти недавние платежи.")
+        print(float(transaction_chain[-1].split('|')[1]))
+        if float(transaction_chain[-1].split('|')[1]) == amount:
+            await approve_payment(-1)
+        else:
+            if float(transaction_chain[-2].split('|')[1]) == amount:
+                await approve_payment(-2)
+            else:
+                if float(transaction_chain[-3].split('|')[1]) == amount:
+                    await approve_payment(-3)
+                else:
+                    if float(transaction_chain[-4].split('|')[1]) == amount:
+                        await approve_payment(-4)
+                    else:
+                        if float(transaction_chain[-5].split('|')[1]) == amount:
+                            await approve_payment(-5)
+                        else:
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text="Не удалось найти недавние платежи.")
 
 
 
