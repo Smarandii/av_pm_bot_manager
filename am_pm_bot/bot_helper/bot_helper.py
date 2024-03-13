@@ -12,7 +12,7 @@ from am_pm_bot.payment_helper.yoomoney_payment_helper import YoomoneyPaymentHelp
 import requests
 import datetime as dt
 from datetime import datetime, timedelta
-#asdasdasd
+
 
 
 class BotHelper:
@@ -231,7 +231,9 @@ class BotHelper:
         
         
         current_transaction_data = next((transaction for transaction in unpaid_payment_tickets if transaction['id'] == payment_id), None) # неоплаченная транзакция
-        amount = current_transaction_data['attributes']['amount'] # сумма к оплате
+
+
+        amount = current_transaction_data['attributes']['amount']  # попытка доступа к элементу
 
 
         target = "TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A"
@@ -244,7 +246,7 @@ class BotHelper:
            )
 
         def find_amount_after_commission(amount, list_amounts):
-            commission = 2
+            commission = 3
             start_amount = amount - commission
 
             for i in range((start_amount * 100), (amount + 1) * 100):

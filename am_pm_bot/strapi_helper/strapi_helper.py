@@ -62,11 +62,33 @@ class StrapiHelper:
         ).json()["data"][0]
 
     def get_client_by_manager_telegram_id(self, manager_telegram_id: int):
+        managers_list = self.__send_get(
+            url=f"{self.host}/api/{self.MANAGER_ENTITY_NAME_PLURAL}?"
+                f"[$and][0][telegram_id][$eq]={manager_telegram_id}"
+                f"&populate=client"
+        ).json()["data"]
+        
+        manager_telegram_id_str = str(manager_telegram_id)
+        target_telegram_id = manager_telegram_id_str
+
+        index = None
+        for i, item in enumerate(managers_list):
+            if item['attributes']['telegram_id'] == target_telegram_id:
+                index = i
+                break
+
+        if index is not None:
+            found_item = managers_list[index]
+            print("Number:", index)
+            print("Element content:", found_item)
+        else:
+            print("Didn't find")
+
         return self.__send_get(
             url=f"{self.host}/api/{self.MANAGER_ENTITY_NAME_PLURAL}?"
                 f"[$and][0][telegram_id][$eq]={manager_telegram_id}"
                 f"&populate=client"
-        ).json()["data"][0]['attributes']['client']['data']
+        ).json()["data"][index]['attributes']['client']['data']
 
     def get_list_of_managers(self):
         return self.__send_get(
@@ -94,7 +116,6 @@ class StrapiHelper:
         return self.__send_post(url=f"{self.host}/api/{self.CLIENT_ENTITY_NAME_PLURAL}", payload=json_body)
 
     def save_request_info(self, request: Request):
-        print(f"----------------- USER_ID: {request.user.id} -----------------  ")
         json_body = {
             "data": {
                 "status": request.status,
