@@ -9,10 +9,10 @@ from am_pm_bot.callback_data.payment_ticket import PaymentTicketCallback
 from am_pm_bot.payment_helper.crypto_payment_helper import CryptoPaymentHelper
 from am_pm_bot import Bot, InlineKeyboardButton, InlineKeyboardMarkup, logging
 from am_pm_bot.payment_helper.yoomoney_payment_helper import YoomoneyPaymentHelper
+import math
 import requests
 import datetime as dt
 from datetime import datetime, timedelta
-
 
 
 class BotHelper:
@@ -26,9 +26,10 @@ class BotHelper:
         self.logger = logging.getLogger("bot_helper")
         self.logger.setLevel(logging.INFO)
 
+
     def __init_welcome_keyboard(self, message: Message):
         self.__request_button = InlineKeyboardButton(
-            text="Создать запрос",
+            text=f"Создать запрос",
             callback_data=BaseCallback(command="create_request", user_id=message.from_user.id).pack()
         )
         return InlineKeyboardMarkup(inline_keyboard=[[self.__request_button]])
@@ -40,8 +41,17 @@ class BotHelper:
         )
         return InlineKeyboardMarkup(inline_keyboard=[[self.__request_button]])
 
+    
 
 
+
+    async def get_transact_data(self, state: FSMContext):
+        user_data = await state.get_data()
+        print("Transaction hash:")
+        print(user_data['transaction_hash'])
+
+        return user_data['transaction_hash']
+        
 
     async def __init_pay_via_yoomoney_button(
             self,
@@ -69,6 +79,9 @@ class BotHelper:
 
     global repeatPayment
 
+
+
+
     async def __init_pay_via_crypto_button(
             self,
             amount: float,
@@ -90,7 +103,7 @@ class BotHelper:
             currency = "$"
 
         global repeatPayment
-        repeatPayment = f"Оплатите {currency}{amount} через USDT TRC-20, после проведения транзакции отправьте /check_crypto_payment."
+        repeatPayment = f"Оплатите {currency}{amount} через USDT TRC-20, после подтверждения транзакции отправьте /check_crypto_payment."
 
         return InlineKeyboardButton(
             text=f"{currency}{amount} / USDT TRC-20",
@@ -137,6 +150,14 @@ class BotHelper:
 
         return InlineKeyboardMarkup(inline_keyboard=[[self.__payment_ticket_confirmation_button]])
 
+    async def __init_transaction_help(self):
+        self.__help_with_transaction_hash_button = InlineKeyboardButton(
+            text = f"Как посмотреть хэш транзакции",
+            url = "https://telegra.ph/Instrukciya-kak-smotret-hehsh-Txid-tranzakcii-03-17"
+        )
+        return InlineKeyboardMarkup(inline_keyboard=[[self.__help_with_transaction_hash_button]])
+
+
     def __init_contact_client_keyboard(self, request: Request):
         self.__contact_button = InlineKeyboardButton(
             text="Связаться с клиентом",
@@ -162,8 +183,9 @@ class BotHelper:
     async def ask_request_description(self, callback_query: CallbackQuery):
         await self.__tg_bot.send_message(callback_query.from_user.id, f"Пожалуйста, опишите Вашу ситуацию максимально подробно, укажите все существенные факты и обстоятельства:")
 
-    async def ask_for_wallet(self, callback_query: CallbackQuery):
-        await self.__tg_bot.send_message(callback_query.from_user.id, f"Пожалуйста, предоставьте публичный адрес криптокошелька для дополнительной проверки.")
+
+    async def ask_for_transaction_id(self, message: Message):
+        await self.__tg_bot.send_message(chat_id = message.from_user.id, text = f"Отправьте, пожалуйста, Transaction ID (хэш)", reply_markup = await self.__init_transaction_help())
 
     async def about_us_description(self, callback_query: CallbackQuery):
         await self.__tg_bot.send_message(callback_query.from_user.id, greeting_text)
@@ -173,6 +195,11 @@ class BotHelper:
 
     async def ask_payment_currency(self, message: Message):
         await self.__tg_bot.send_message(message.from_user.id, f"В какой валюте производится оплата?")
+
+    async def notify_about_process_payment(self, message: Message):
+        await self.__tg_bot.send_message(message.from_user.id, f"Пожалуйста подождите, идёт проверка транзакции... 🕔")
+
+
 
     async def ask_confirmation(self, message: Message, state: FSMContext):
         client_info = self.__strapi_helper.get_client_by_manager_telegram_id(
@@ -233,7 +260,7 @@ class BotHelper:
         current_transaction_data = next((transaction for transaction in unpaid_payment_tickets if transaction['id'] == payment_id), None) # неоплаченная транзакция
 
 
-        amount = current_transaction_data['attributes']['amount']  # попытка доступа к элементу
+        amount = current_transaction_data['attributes']['amount']
 
 
         target = "TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A"
@@ -275,6 +302,27 @@ class BotHelper:
                     transaction_chain.append(output)
 
         print(transaction_chain)
+
+        transactions_datetime = [datetime.strptime(transaction.split('|')[0], '%Y-%m-%d %H:%M:%S') for transaction in transaction_chain]
+
+        # Определение даты, которая была сутки назад от текущего момента времени
+        one_day_ago = datetime.now() - timedelta(days=3)
+
+        # Фильтрация списка
+        filtered_transactions = [transaction for transaction in transactions_datetime if transaction >= one_day_ago]
+
+        # Преобразование обратно в формат строк
+        transaction_chain = [transaction for transaction in transaction_chain if datetime.strptime(transaction.split('|')[0], '%Y-%m-%d %H:%M:%S') in filtered_transactions]
+
+        if len(transaction_chain) > 1:
+            print("3@$#"*20)
+        else:
+            pass
+
+        print("A"*30)
+        print(transaction_chain)
+        print("A"*30)
+
         transaction_chain_only_amount = []
         for i in range(len(transaction_chain)):
             transaction_chain_only_amount.append(float(transaction_chain[i].split('|')[1]))
@@ -304,9 +352,9 @@ class BotHelper:
                 filtered_data = [item.split('|')[0] for item in filtered_data]
                 print("#####")
                 print(filtered_data)
-                current_time = datetime.now() - timedelta(hours=24)
+                current_time = datetime.now() - timedelta(hours=72)
 
-                end_time = current_time + timedelta(hours=24)
+                end_time = current_time + timedelta(hours=72)
 
 
                 filtered_data_list = []
@@ -342,6 +390,87 @@ class BotHelper:
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text="Не удалось найти недавние платежи.")
 
 
+
+    async def check_crypto_payment(self, message: Message, txid_hash):
+
+        txid = txid_hash
+
+        manager = self.__strapi_helper.get_manager_by_client_telegram_id(message.from_user.id)
+
+        payment_id = unpaid_payment_ticket_id # получаем айди текущей транзакции
+        unpaid_payment_tickets = self.__strapi_helper.get_unpaid_payment_tickets_by_telegram_id(message.from_user.id) # список всех транзакций
+        
+        
+        current_transaction_data = next((transaction for transaction in unpaid_payment_tickets if transaction['id'] == payment_id), None) # неоплаченная транзакция
+
+
+        amount = current_transaction_data['attributes']['amount']
+
+
+        target = "TW4FQqc76GbqSKSJQWzyJXd7MVqkxbec4A"
+        blockchain_network = "trc20"
+
+
+        response = requests.get(
+            f"https://api.trongrid.io/v1/accounts/{target}/transactions/{blockchain_network}",
+            headers = {"accept": "application/json"}
+           )
+
+
+        transaction_chain = []
+
+        for transaction in response.json().get('data', []):
+            currency = transaction.get("token_info", {}).get('symbol')
+            sender = transaction.get('from')
+            transact_id = transaction.get('transaction_id')
+            receiver = transaction.get("to")
+            money_amount_non_tempered = transaction.get('value', '')
+            dec = -1 * int(transaction.get('token_info', {}).get('decimals', '6'))
+            money_amount_final = float(money_amount_non_tempered[:dec] + '.' + money_amount_non_tempered[dec:])
+            transaction_time = dt.datetime.fromtimestamp(float(transaction.get('block_timestamp', '')) / 1000)
+
+            if receiver == target:
+                if currency == "USDT":
+                    output = f'{transaction_time}|{money_amount_final}%{transact_id}'
+                    transaction_chain.append(output)
+
+        keyword_found = False
+
+        for item in transaction_chain:
+            if txid in item:
+                keyword_found = True
+                break
+
+        if keyword_found:
+            pass
+        else:
+            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция не подтверждена.")
+
+        for data in transaction_chain:
+            parts = data.split('%')
+
+            if len(parts) > 1:
+                txid_from_data = parts[-1].strip()
+
+                if txid_from_data == txid:
+
+
+                    data_parts = parts[0].split('|')
+            
+                    transaction_date = data_parts[0]
+                    transaction_amount = data_parts[1]
+
+                    if float(amount) == math.ceil(float(transaction_amount) / 2) * 2:
+                        await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                        await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
+                        await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                        self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
+                else:
+                    print("Txid не соответствует заданному значению.")
+            else:
+                await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция не подтверждена.")
+
+        print(transaction_chain)
 
     async def check_yoomoney_payment(self, message: Message):
         unpaid_payment_tickets = self.__strapi_helper.get_unpaid_payment_tickets_by_telegram_id(message.from_user.id)

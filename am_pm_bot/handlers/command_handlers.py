@@ -3,6 +3,7 @@ from am_pm_bot import router, bot, logging
 from am_pm_bot.bot_helper.bot_helper import BotHelper
 from am_pm_bot.handlers import CommandStart, Command, Message
 from am_pm_bot.forms.create_payment_ticket_form import CreatePaymentTicketForm
+from am_pm_bot.forms.transaction_form import getTransactionForm
 
 
 bot_pm = BotHelper(tg_bot=bot)
@@ -32,10 +33,19 @@ async def command_request_payment_handler(message: Message, state: FSMContext) -
 
 
 @router.message(Command("check_payment"))
-async def command_payment_success_handler(message: Message) -> None: 
+async def command_payment_success_handler(message: Message, state: FSMContext) -> None: 
     await bot_pm.check_yoomoney_payment(message)
 
+    
+    
+
+    
+
+
 @router.message(Command("check_crypto_payment"))
-async def command_payment_success_handler(message: Message) -> None: 
-    await bot_pm.check_plisio_payment(message)
+async def command_payment_success_handler(message: Message, state: FSMContext) -> None: 
+
+    await state.set_state(getTransactionForm.transaction_hash)
+
+    await bot_pm.ask_for_transaction_id(message)
 
