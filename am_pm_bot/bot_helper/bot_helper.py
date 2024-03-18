@@ -460,11 +460,30 @@ class BotHelper:
                     transaction_date = data_parts[0]
                     transaction_amount = data_parts[1]
 
-                    if float(amount) == math.ceil(float(transaction_amount) / 2) * 2:
-                        await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
-                        await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
-                        await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
-                        self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
+                    if amount == 4:
+                        if float(amount) == math.ceil(float(transaction_amount) / 2) * 2 or math.ceil(float(transaction_amount) / 3) * 3:
+                            await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                            self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
+                    elif amount == 3:
+                        if float(amount) == math.ceil(float(transaction_amount) / 2) * 2 or math.ceil(float(transaction_amount) / 3) * 3:
+                            await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                            self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
+                    elif amount < 100:
+                        if float(amount) == math.ceil(float(transaction_amount) / 2) * 2 or math.ceil(float(transaction_amount) / 3) * 3 or math.ceil(float(transaction_amount) / 4) * 4:
+                            await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                            self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
+                    else:
+                        if float(amount) == math.ceil(float(transaction_amount) / 5) * 5:
+                            await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
+                            self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
                 else:
                     print("Txid не соответствует заданному значению.")
             else:
