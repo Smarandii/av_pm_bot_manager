@@ -27,7 +27,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     import am_pm_bot.handlers.command_handlers
-    import am_pm_bot.handlers.command_handlers
     import am_pm_bot.handlers.callback_query_handlers
     import am_pm_bot.handlers.form_handlers
     import am_pm_bot.handlers.redirect_messages_handlers
