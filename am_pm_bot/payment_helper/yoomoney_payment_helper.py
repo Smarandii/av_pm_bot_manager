@@ -27,6 +27,8 @@ class YoomoneyPaymentHelper:
             currency: str,
             payment_ticket_id: int
     ):
+        print(f"ID: {telegram_id}")
+        print(f"ticket ID: {payment_ticket_id}")
         return Quickpay(
             receiver="4100117136887722",
             quickpay_form="shop",
@@ -55,9 +57,16 @@ class YoomoneyPaymentHelper:
         return dollar_rub_rate
 
     async def check_payment_from_user(self, from_user: User, payment_ticket: dict):
+        print("--------------------------------------------------- DEBAGGING --------------------------------------------------- ")
+        print(f"User: {from_user.id}\nPayment ticket: {payment_ticket['id']}")
         history = self.yoomoney_client.operation_history(
             records=1, label=self.__generate_yoomoney_label(from_user.id, payment_ticket['id'])
         ) #error
 
         for operation in history.operations:
+            print("*"*20)
+            print(f"OPERATION: {operation}")
+            print("*"*20)
             return operation
+
+        print(history.operations)

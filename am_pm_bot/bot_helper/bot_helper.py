@@ -60,20 +60,36 @@ class BotHelper:
             currency: str,
             payment_ticket_id: int
     ):
+
+        usd_rate = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"]
+
         payment_url = await self.__yoomoney_payment_helper.generate_payment_url(
             telegram_id,
-            amount,
+            amount*usd_rate,
+            currency,
+            payment_ticket_id
+        )
+        aamount = 0
+        if currency.lower() == "rub":
+            currency = "₽"
+            text_output = f"{currency}{amount*usd_rate} / Yoomoney"
+            aamount = amount*usd_rate
+            currency = "rub"
+        else:
+            currency = "$"
+            text_output = f"{currency}{amount} / Yoomoney"
+            aamount = amount
+            currency = "usd"
+
+        payment_url = await self.__yoomoney_payment_helper.generate_payment_url(
+            telegram_id,
+            aamount,
             currency,
             payment_ticket_id
         )
 
-        if currency == "rub":
-            currency = "₽"
-        else:
-            currency = "$"
-
         return InlineKeyboardButton(
-            text=f"{currency}{amount} / Yoomoney",
+            text=text_output,
             url=payment_url
         )
 
@@ -97,13 +113,14 @@ class BotHelper:
         )
         self.__strapi_helper.save_payment_ticket_crypto_invoice_id(payment_ticket_id, payment_url)
 
-        if currency == "rub":
-            currency = "₽"
+        
+        if currency.lower() == "rub":
+            currency = "$"
         else:
             currency = "$"
 
         global repeatPayment
-        repeatPayment = f"Оплатите {currency}{amount} через USDT TRC-20, после подтверждения транзакции отправьте /check_crypto_payment."
+        repeatPayment = f"Оплатите {currency}{amount} через USDT TRC-20, после подтверждения транзакции в блокчейне отправьте /check_crypto_payment."
 
         return InlineKeyboardButton(
             text=f"{currency}{amount} / USDT TRC-20",
@@ -134,17 +151,21 @@ class BotHelper:
         return InlineKeyboardMarkup(inline_keyboard=[[self.__pay_via_yoomoney_button, self.__pay_via_crypto_button]])
 
     async def __init_payment_ticket_confirmation_button(self, amount: float, telegram_id: int, currency: str):
-        if currency == "rub":
+        usd_rate = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"]
+        aamount = float(amount)
+        if currency.lower() == "rub":
             currencyChar = "₽"
+            aamount = round(aamount/usd_rate)
         else:
             currencyChar = "$"
+            aamount = aamount
         self.__payment_ticket_confirmation_button = InlineKeyboardButton(
             text=f"Подтвердить создание платежного талона на сумму {currencyChar}{amount}",
             callback_data=PaymentTicketCallback(
                 command="send_payment_ticket_to_client",
                 telegram_id=telegram_id,
                 currency=currency,
-                amount=amount
+                amount=aamount
             ).pack()
         )
 
@@ -463,24 +484,28 @@ class BotHelper:
                     if amount == 4:
                         if float(amount) == math.ceil(float(transaction_amount) / 2) * 2 or math.ceil(float(transaction_amount) / 3) * 3:
                             await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
                             self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
                     elif amount == 3:
                         if float(amount) == math.ceil(float(transaction_amount) / 2) * 2 or math.ceil(float(transaction_amount) / 3) * 3:
                             await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
                             self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
                     elif amount < 100:
                         if float(amount) == math.ceil(float(transaction_amount) / 2) * 2 or math.ceil(float(transaction_amount) / 3) * 3 or math.ceil(float(transaction_amount) / 4) * 4:
                             await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+                            await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
                             self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
                     else:
                         if float(amount) == math.ceil(float(transaction_amount) / 5) * 5:
                             await self.__tg_bot.send_message(manager['attributes']['telegram_id'], text=f"Транзакция за {transaction_date} на сумму {transaction_amount} успешно выполнена.")
+
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Оплата получена.")
                             await self.__tg_bot.send_message(chat_id=message.from_user.id, text=f"Благодарим Вас за выбор AV Legal. В случае возникновения дополнительных вопросов или потребности в дальнейшей консультации,  обращайтесь к нам. Наша команда всегда готова предоставить Вам квалифицированную помощь и поддержку в решении любых правовых вопросов.")
                             self.__strapi_helper.change_payment_ticket_status(payment_id, "success")
@@ -497,6 +522,9 @@ class BotHelper:
         no_payment = True
         for payment_ticket in unpaid_payment_tickets:
             payment = await self.__yoomoney_payment_helper.check_payment_from_user(message.from_user, payment_ticket) #error 
+            print(f"User BH: {message.from_user.id}")
+            print(f"Payment ticket BH: {payment_ticket['id']}")
+            print(payment)
             if payment is not None:
                 self.logger.info(f"Получена оплата: {payment.status} {payment.amount} {payment.label} "
                                  f"{payment.operation_id} {payment.datetime}")
