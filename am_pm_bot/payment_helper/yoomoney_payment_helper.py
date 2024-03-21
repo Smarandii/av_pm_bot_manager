@@ -18,7 +18,7 @@ class YoomoneyPaymentHelper:
         self.yoomoney_client = Client(self.token)
 
     def __generate_yoomoney_label(self, telegram_id: int, payment_ticket_id: int):
-        return f"{self.DOMAIN} | payment from: {telegram_id} | payment ticket id: {payment_ticket_id}"
+        return f"{self.DOMAIN} {telegram_id} {payment_ticket_id}"
 
     async def generate_payment_url(
             self,
@@ -57,7 +57,7 @@ class YoomoneyPaymentHelper:
         return dollar_rub_rate
 
     async def check_payment_from_user(self, from_user: User, payment_ticket: dict):
-        print("--------------------------------------------------- DEBAGGING --------------------------------------------------- ")
+        print("--------------------------------------------------- DEBUGGING --------------------------------------------------- ")
         print(f"User: {from_user.id}\nPayment ticket: {payment_ticket['id']}")
         history = self.yoomoney_client.operation_history(
             records=1, label=self.__generate_yoomoney_label(from_user.id, payment_ticket['id'])
@@ -68,5 +68,3 @@ class YoomoneyPaymentHelper:
             print(f"OPERATION: {operation}")
             print("*"*20)
             return operation
-
-        print(history.operations)
