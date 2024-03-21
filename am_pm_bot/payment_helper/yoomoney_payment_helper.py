@@ -11,14 +11,14 @@ class YoomoneyPaymentHelper:
     dollar_rub_rate = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"]
 
 
-    DOMAIN = "av_pm_bot"
+    DOMAIN = "avm"
 
     def __init__(self):
         self.token = getenv("YOOMONEY_TOKEN")
         self.yoomoney_client = Client(self.token)
 
     def __generate_yoomoney_label(self, telegram_id: int, payment_ticket_id: int):
-        return f"{self.DOMAIN} {telegram_id} {payment_ticket_id}"
+        return f"{self.DOMAIN}-{telegram_id}-{payment_ticket_id}"
 
     async def generate_payment_url(
             self,
