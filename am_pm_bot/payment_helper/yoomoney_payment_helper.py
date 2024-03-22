@@ -67,4 +67,8 @@ class YoomoneyPaymentHelper:
             print("*"*20)
             print(f"OPERATION: {operation}")
             print("*"*20)
+<<<<<<< HEAD
             return operation
+=======
+            return operation
+>>>>>>> 44c03eb (interface fixes)

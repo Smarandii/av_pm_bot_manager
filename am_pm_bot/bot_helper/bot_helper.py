@@ -60,7 +60,7 @@ class BotHelper:
             currency: str,
             payment_ticket_id: int
     ):
-
+        print(f"AMOUNT {amount}")
         usd_rate = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"]
 
         payment_url = await self.__yoomoney_payment_helper.generate_payment_url(
@@ -71,13 +71,15 @@ class BotHelper:
         )
         aamount = 0
         if currency.lower() == "rub":
+            ok_amount = round(amount*usd_rate)
+            print(f"{ok_amount} AMOUNT BLAA")
             currency = "₽"
-            text_output = f"{currency}{amount*usd_rate} / Yoomoney"
+            text_output = f"{currency}{ok_amount} / Yoomoney"
             aamount = amount*usd_rate
             currency = "rub"
         else:
             currency = "$"
-            text_output = f"{currency}{amount} / Yoomoney"
+            text_output = f"{currency}{round(amount)} / Yoomoney"
             aamount = amount
             currency = "usd"
 
@@ -113,14 +115,17 @@ class BotHelper:
         )
         self.__strapi_helper.save_payment_ticket_crypto_invoice_id(payment_ticket_id, payment_url)
 
-        
+        usd_rate = round(requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"])        
         if currency.lower() == "rub":
             currency = "$"
+            ok_amount = round(amount*usd_rate)
+            next_repeat_payment = f"Оплатите ₽{ok_amount} / {currency}{amount}"
         else:
             currency = "$"
+            next_repeat_payment = f"Оплатите {currency}{amount}"
 
         global repeatPayment
-        repeatPayment = f"Оплатите {currency}{amount} через USDT TRC-20, после подтверждения транзакции в блокчейне отправьте /check_crypto_payment."
+        repeatPayment = f"{next_repeat_payment} через USDT TRC-20, после подтверждения транзакции в блокчейне отправьте /check_crypto_payment."
 
         return InlineKeyboardButton(
             text=f"{currency}{amount} / USDT TRC-20",
@@ -151,11 +156,15 @@ class BotHelper:
         return InlineKeyboardMarkup(inline_keyboard=[[self.__pay_via_yoomoney_button, self.__pay_via_crypto_button]])
 
     async def __init_payment_ticket_confirmation_button(self, amount: float, telegram_id: int, currency: str):
-        usd_rate = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"]
+        usd_rate = round(requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"])
+        print("()"*10 + "\n"+amount)
         aamount = float(amount)
+
         if currency.lower() == "rub":
             currencyChar = "₽"
-            aamount = round(aamount/usd_rate)
+            aamount = round(aamount/usd_rate, 4)
+            print(f"AAAAMOUNT : {aamount}")
+            print(f"USD RATE: {usd_rate}")
         else:
             currencyChar = "$"
             aamount = aamount
