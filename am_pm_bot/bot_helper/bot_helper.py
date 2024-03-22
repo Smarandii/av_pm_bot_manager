@@ -72,7 +72,6 @@ class BotHelper:
         aamount = 0
         if currency.lower() == "rub":
             ok_amount = round(amount*usd_rate)
-            print(f"{ok_amount} AMOUNT BLAA")
             currency = "₽"
             text_output = f"{currency}{ok_amount} / Yoomoney"
             aamount = amount*usd_rate
@@ -119,7 +118,7 @@ class BotHelper:
         if currency.lower() == "rub":
             currency = "$"
             ok_amount = round(amount*usd_rate)
-            next_repeat_payment = f"Оплатите ₽{ok_amount} / {currency}{amount}"
+            next_repeat_payment = f"Оплатите {currency}{amount}"
         else:
             currency = "$"
             next_repeat_payment = f"Оплатите {currency}{amount}"
