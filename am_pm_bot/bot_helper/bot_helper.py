@@ -78,8 +78,9 @@ class BotHelper:
             aamount = amount*usd_rate
             currency = "rub"
         else:
-            currency = "$"
-            text_output = f"{currency}{round(amount)} / Yoomoney"
+            ok_amount = round(amount*usd_rate)
+            currency = "₽"
+            text_output = f"{currency}{ok_amount} / Yoomoney"
             aamount = amount
             currency = "usd"
 
