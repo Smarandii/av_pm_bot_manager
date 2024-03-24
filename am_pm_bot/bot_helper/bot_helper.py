@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from am_pm_bot.strapi_helper import StrapiHelper
@@ -65,13 +65,14 @@ class BotHelper:
 
         payment_url = await self.__yoomoney_payment_helper.generate_payment_url(
             telegram_id,
-            amount*usd_rate,
+            round(amount*usd_rate),
             currency,
             payment_ticket_id
         )
         aamount = 0
         if currency.lower() == "rub":
             ok_amount = round(amount*usd_rate)
+            print(f"{ok_amount} AMOUNT BLAA")
             currency = "₽"
             text_output = f"{currency}{ok_amount} / Yoomoney"
             aamount = amount*usd_rate
@@ -106,9 +107,10 @@ class BotHelper:
             currency: str,
             payment_ticket_id: int
     ):
+        
         payment_url = await self.__crypto_payment_helper.generate_payment_url(
             telegram_id,
-            amount,
+            round(amount),
             currency,
             payment_ticket_id
         )
@@ -117,17 +119,16 @@ class BotHelper:
         usd_rate = round(requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"])        
         if currency.lower() == "rub":
             currency = "$"
-            ok_amount = round(amount*usd_rate)
-            next_repeat_payment = f"Оплатите {currency}{amount}"
+            next_repeat_payment = f"Оплатите {currency}{round(amount)}"
         else:
             currency = "$"
-            next_repeat_payment = f"Оплатите {currency}{amount}"
+            next_repeat_payment = f"Оплатите {currency}{round(amount)}"
 
         global repeatPayment
         repeatPayment = f"{next_repeat_payment} через USDT TRC-20, после подтверждения транзакции в блокчейне отправьте /check_crypto_payment."
 
         return InlineKeyboardButton(
-            text=f"{currency}{amount} / USDT TRC-20",
+            text=f"{currency}{round(amount)} / USDT TRC-20",
             callback_data="pay_usdt_trc_20" 
         )
 
@@ -156,14 +157,11 @@ class BotHelper:
 
     async def __init_payment_ticket_confirmation_button(self, amount: float, telegram_id: int, currency: str):
         usd_rate = round(requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()['Valute']['USD']["Value"])
-        print("()"*10 + "\n"+amount)
         aamount = float(amount)
 
         if currency.lower() == "rub":
             currencyChar = "₽"
             aamount = round(aamount/usd_rate, 4)
-            print(f"AAAAMOUNT : {aamount}")
-            print(f"USD RATE: {usd_rate}")
         else:
             currencyChar = "$"
             aamount = aamount
@@ -173,7 +171,7 @@ class BotHelper:
                 command="send_payment_ticket_to_client",
                 telegram_id=telegram_id,
                 currency=currency,
-                amount=aamount
+                amount=float(round(aamount))
             ).pack()
         )
 
@@ -265,7 +263,7 @@ class BotHelper:
             chat_id=callback_data.telegram_id,
             text="Вы только что получили платежный талон. Когда оплата будет завершена - отправьте /check_payment для платежа банковской картой и /check_crypto_payment для платежа криптовалютой.",
             reply_markup=await self.__init_pay_choices_keyboard(
-                amount=callback_data.amount,
+                amount=round(callback_data.amount),
                 telegram_id=callback_data.telegram_id,
                 currency=callback_data.currency,
                 payment_ticket_id=payment_ticket['data']['id']
@@ -432,6 +430,9 @@ class BotHelper:
         
         current_transaction_data = next((transaction for transaction in unpaid_payment_tickets if transaction['id'] == payment_id), None) # неоплаченная транзакция
 
+        print("*"*38)
+        print(current_transaction_data)
+        print("*"*38)
 
         amount = current_transaction_data['attributes']['amount']
 
